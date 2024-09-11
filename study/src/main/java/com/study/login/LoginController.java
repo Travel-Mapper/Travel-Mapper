@@ -12,11 +12,13 @@ import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import java.security.Key;
 import java.util.Date;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 @Controller
@@ -75,6 +77,7 @@ public class LoginController {
                     .parseClaimsJws(token);
         } catch (Exception ignored) {
             ignored.printStackTrace();
+            return null;
         }
         return claims.getBody().get("id", String.class);
     }

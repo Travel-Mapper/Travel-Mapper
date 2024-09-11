@@ -36,6 +36,10 @@ dependencies {
 	implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.2'
 	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.2'
 	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.2'
+	// https://mvnrepository.com/artifact/com.google.zxing/javase
+	implementation group: 'com.google.zxing', name: 'javase', version: '3.5.3'
+// https://mvnrepository.com/artifact/com.google.zxing/core
+	implementation group: 'com.google.zxing', name: 'core', version: '3.5.3'
 }
 
 tasks.named('test') {
