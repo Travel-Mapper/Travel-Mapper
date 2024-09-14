@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>qrTest</title>
+  </head>
+  <body>
+    <button id="btn">test</button>
+    <img src="" alt="" id="image" />
+    <script src="https://code.jquery.com/jquery-latest.min.js"></script>
+
+    <script>
+      $(document).ready(function () {
+        $("#btn").click(function () {
+          $.ajax({
+            url: "http://localhost:8080/qr-login", // 요청할 서버 URL
+            type: "GET", // 요청 방식 (GET 또는 POST)
+            data: {
+              // 서버로 보낼 데이터가 있으면 여기에 추가 (예: qrCodeId: "12345")
+              //   qrCodeId: "12345",
+              mail: "sss",
+            },
+            success: function (response) {
+              // 요청이 성공했을 때 실행할 코드
+              console.log("서버 응답:", response);
+              $("#image").attr("src", "data:image/png;base64," + response);
+              alert("로그인이 성공적으로 처리되었습니다.");
+            },
+            error: function (xhr, status, error) {
+              // 요청이 실패했을 때 실행할 코드
+              console.log("에러 발생:", error);
+              alert("로그인 처리에 실패했습니다.");
+            },
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

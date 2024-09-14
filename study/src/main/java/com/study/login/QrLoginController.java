@@ -11,12 +11,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import javax.servlet.http.HttpSession;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -31,8 +33,14 @@ public class QrLoginController {
     private final ConcurrentHashMap<String, String> secreteRepo = new ConcurrentHashMap<>();
 
 
+    @RequestMapping("/")
+    public String testHome(){
+        System.out.println("QrLoginController.testHome");
+        return "QRpage";
+    }
+
     @RequestMapping("/qr-login")
-    public ResponseEntity<byte[]> makeQr(@RequestParam("mail") String mail) throws WriterException {
+    public ResponseEntity makeQr(@RequestParam("mail") String mail) throws WriterException {
         // 사용자가 이메일 주소를 입력하면 qr 코드 이미지를 전송함
 
         // 유저 식별값 uuid
@@ -57,9 +65,12 @@ public class QrLoginController {
             //Bitmatrix, file.format, outputStream
             MatrixToImageWriter.writeToStream(encode, "PNG", out);
 
+            String qrUrl = Base64.getEncoder().encodeToString(out.toByteArray());
+
+//            return qrUrl;
             return ResponseEntity.ok()
                     .contentType(MediaType.IMAGE_PNG)
-                    .body(out.toByteArray());
+                    .body(qrUrl);
 
         } catch (Exception e) {
             log.warn("QR Code OutputStream 도중 Excpetion 발생, {}", e.getMessage());
