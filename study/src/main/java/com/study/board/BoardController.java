@@ -1,14 +1,20 @@
 package com.study.board;
 
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
-@RestController
-@RequestMapping("/boards")
+
+@Controller
+@RequestMapping("/api/boards")
 public class BoardController {
-    @GetMapping("/")
-    public String index() {
-        return "index";
+    @GetMapping("/all")
+    public String getBoardList() {
+        return "/boards/boardList";
+    }
+
+    @GetMapping("/write")
+    public String boardWrite(){
+        return "/boards/boardWrite";
     }
 }
