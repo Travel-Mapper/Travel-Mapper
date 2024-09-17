@@ -67,13 +67,12 @@ public class QrLoginController {
 
             String qrUrl = Base64.getEncoder().encodeToString(out.toByteArray());
 
-//            return qrUrl;
             return ResponseEntity.ok()
                     .contentType(MediaType.IMAGE_PNG)
                     .body(qrUrl);
 
         } catch (Exception e) {
-            log.warn("QR Code OutputStream 도중 Excpetion 발생, {}", e.getMessage());
+            log.warn("QR Code 생성 도중 Excpetion 발생, {}", e.getMessage());
         }
 
         return null;
@@ -104,10 +103,12 @@ public class QrLoginController {
     public String connect(@RequestParam("secret") String secret, @RequestParam("mail") String mail) {
         System.out.println("QrLoginController.connect");
         SseEmitter emitter = allEmitters.get(mail);
+        System.out.println(emitter == null);
         String savedSecret = secreteRepo.get(mail);
+        System.out.println(savedSecret == null);
 
         if (!savedSecret.equals(secret)) {
-            return "발급된 qr 링크와 접근 링크가 다름.";
+            return "발급된 qr과 접근 링크가 다름.";
         }
 
         // 클라이언트로 즉시 초기 메시지 전송
