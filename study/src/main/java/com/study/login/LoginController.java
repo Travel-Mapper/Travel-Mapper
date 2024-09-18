@@ -63,22 +63,22 @@ public class LoginController {
     /**
      * qr 코드 로그인. sse 통신을 열면서 메일 주소로 qr이미지 메일 전송
      */
-    @RequestMapping("/qr-login")
-    public ResponseEntity makeQr(@RequestParam("mail") String mail) {
-
-        try {
-            String qrUrl = loginService.makeQrCode(mail);
-            loginService.sendMail(mail);
-
-            return ResponseEntity.ok()
-                    .contentType(MediaType.IMAGE_PNG)
-                    .body(qrUrl);
-
-        } catch (Exception e) {
-            log.warn("QR Code OutputStream 도중 Excpetion 발생, {}", e.getMessage());
-            return ResponseEntity.status(500).build();
-        }
-    }
+//    @RequestMapping("/qr-login")
+//    public ResponseEntity makeQr(@RequestParam("mail") String mail) {
+//
+//        try {
+//            String qrUrl = loginService.makeQrCode(mail);
+//            loginService.sendMail(mail, qrUrl);
+//
+//            return ResponseEntity.ok()
+//                    .contentType(MediaType.IMAGE_PNG)
+//                    .body(qrUrl);
+//
+//        } catch (Exception e) {
+//            log.warn("QR Code OutputStream 도중 Excpetion 발생, {}", e.getMessage());
+//            return ResponseEntity.status(500).build();
+//        }
+//    }
 
     @RequestMapping("/qr_mail")
     public SseEmitter qrMailSendAndSseConnection(@RequestParam("mail") String mail) {
@@ -103,5 +103,27 @@ public class LoginController {
 //            emitter.completeWithError(e);
 //        }
         return emitter;
+    }
+
+    @RequestMapping("/sse-qr-test")
+    public ResponseEntity test(@RequestParam("mail") String mail, @RequestParam("secret") String secret){
+        SseEmitter sseEmitter = loginService.getSseEmitter(mail);
+        boolean validated = loginService.validateSecret(mail, secret);
+
+        try {
+            if(!validated){
+                sseEmitter.send(SseEmitter.event()
+                        .name("qr")
+                        .data("wrong secret"));
+            }
+            sseEmitter.send(SseEmitter.event()
+                    .name("qr")
+                    .data("success"));
+            // todo 성공시 jwt 토큰 발행
+            sseEmitter.complete();
+            return ResponseEntity.ok().build();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

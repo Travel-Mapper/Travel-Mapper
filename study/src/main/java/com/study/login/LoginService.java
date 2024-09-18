@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 public class LoginService {
 
     private final String FROM = "9669579@naver.com"; // 보내는 사람의 이메일 주소
-    private final String PASSWORD = ""; // 보내는 사람의 이메일 계정 비밀번호
+    private final String PASSWORD = "dkshkWkwmd"; // 보내는 사람의 이메일 계정 비밀번호
     private final String HOST = "smtp.naver.com"; // 구글 메일 서버 호스트 이름
     private final String MAIL_PATH = "C:\\Users\\hojun\\Desktop\\Git\\Travel-Mapper\\study\\src\\main\\resources\\templates\\QRpage.html";
 
@@ -102,6 +102,7 @@ public class LoginService {
             Message msg = writeMailMessage(session, receiver, "QR코드 전송", html);
             Transport.send(msg);
         } catch (MessagingException e) {
+            e.printStackTrace();
             throw new RuntimeException("메일 전송 오류", e);
         }
     }
@@ -163,7 +164,7 @@ public class LoginService {
 
         int width = 200;
         int height = 200;
-        String url = "http://" + WEB_NAME + "/sse-login-test?&mail=" + mail + "&secret=" + secret;
+        String url = "http://" + WEB_NAME + "/api/sse-qr-test?&mail=" + mail + "&secret=" + secret;
 
         // QR 코드 정보 생성
         BitMatrix encode = new MultiFormatWriter().encode(url, BarcodeFormat.QR_CODE, width, height);
