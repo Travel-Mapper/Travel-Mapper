@@ -119,9 +119,12 @@ public class LoginController {
             sseEmitter.send(SseEmitter.event()
                     .name("qr")
                     .data("success"));
-            // todo 성공시 jwt 토큰 발행
+
+            // todo. 아이디 mail로 찾기
+            String jwt = loginService.createJwt("ㅁㅇㄹ");
+            // todo 성공시 jwt 토큰 발행. 토큰은 프론트에서 쿠키로 설정.
             sseEmitter.complete();
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok().body(jwt);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
