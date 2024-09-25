@@ -1,0 +1,24 @@
+<mapper namespace="com.study.chat.mapper.ChatRoomMapper">
+    <select id="findById" parameterType="String" resultType="com.study.chat.entity.ChatRoom">
+        SELECT * FROM chat_room WHERE room_id = #{roomId}
+    </select>
+
+    <select id="findAll" resultType="com.study.chat.entity.ChatRoom">
+        SELECT * FROM chat_room
+    </select>
+
+    <insert id="insert" parameterType="com.study.chat.entity.ChatRoom">
+        INSERT INTO chat_room (room_id, room_name, created_at)
+        VALUES (#{roomId}, #{roomName}, #{createdAt})
+    </insert>
+
+    <update id="update" parameterType="com.study.chat.entity.ChatRoom">
+        UPDATE chat_room
+        SET room_name = #{roomName}
+        WHERE room_id = #{roomId}
+    </update>
+
+    <delete id="delete" parameterType="String">
+        DELETE FROM chat_room WHERE room_id = #{roomId}
+    </delete>
+</mapper>
