@@ -1,5 +1,6 @@
 package com.study.login;
 
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -26,6 +27,10 @@ public class LoginController {
 
     private final LoginService loginService;
 
+    /**
+     * 로그인 시도
+     * 로그인 성공시 jwt 생성하여 쿠키로 발급
+     * */
     @RequestMapping("/login")
     public ResponseEntity<String> loginAction(@RequestParam("id") String id, @RequestParam("pw") String pw, HttpServletResponse response) {
 
@@ -47,42 +52,31 @@ public class LoginController {
     }
 
     /**
-     * jwt 토큰 검증 및 jwt 토큰의 정보와 접근하려는 사용자 정보가 같은지 확인
+     * jwt 토큰 검증 및 jwt 토큰의 정보와 파라미터 id값과 같은지 확인
      */
     @RequestMapping("/login/token")
     @ResponseBody
     public ResponseEntity checkJwt(@CookieValue("token") Cookie jwt, @RequestParam("id") String idInput) {
         String tokenValue = jwt.getValue();
-        String id = loginService.parseJwt(tokenValue);
-        if (!id.equals(idInput)) {
-            return ResponseEntity.status(401).build();
+        try {
+            String id = loginService.parseJwt(tokenValue);
+            if (!id.equals(idInput)) {
+                return ResponseEntity.status(401).build();
+            }
+        }catch (JwtException e){
+            e.printStackTrace();
+            throw new RuntimeException("잘못된 jwt 값", e);
         }
+
         return ResponseEntity.ok().build();
     }
 
     /**
-     * qr 코드 로그인. sse 통신을 열면서 메일 주소로 qr이미지 메일 전송
-     */
-//    @RequestMapping("/qr-login")
-//    public ResponseEntity makeQr(@RequestParam("mail") String mail) {
-//
-//        try {
-//            String qrUrl = loginService.makeQrCode(mail);
-//            loginService.sendMail(mail, qrUrl);
-//
-//            return ResponseEntity.ok()
-//                    .contentType(MediaType.IMAGE_PNG)
-//                    .body(qrUrl);
-//
-//        } catch (Exception e) {
-//            log.warn("QR Code OutputStream 도중 Excpetion 발생, {}", e.getMessage());
-//            return ResponseEntity.status(500).build();
-//        }
-//    }
-
-    @RequestMapping("/qr_mail")
+     * qr 이미지를 메일로 전송
+     * */
+    @RequestMapping("/qr-mail")
     public SseEmitter qrMailSendAndSseConnection(@RequestParam("mail") String mail) {
-        final SseEmitter emitter = new SseEmitter(TimeUnit.MINUTES.toMillis(5)); // 5분
+        final SseEmitter emitter = new SseEmitter(TimeUnit.MINUTES.toMillis(5)); // 5분간 sse 유지
         loginService.saveSseEmitter(mail, emitter);
 
         String qrImage = null;
@@ -95,16 +89,13 @@ public class LoginController {
             log.warn("QR Code 생성 도중 Excpetion 발생, {}", e.getMessage());
         }
 
-//        try {
-//            emitter.send(SseEmitter.event()
-//                    .name("QR CODE")
-//                    .data(qrImage));
-//        } catch (IOException e) {
-//            emitter.completeWithError(e);
-//        }
         return emitter;
     }
 
+    /**
+     * qr 을 통해서 들어오는 링크
+     * secret 값이 옳바르면 jwt 값을 http 바디로 전송
+     * */
     @RequestMapping("/sse-qr-test")
     public ResponseEntity test(@RequestParam("mail") String mail, @RequestParam("secret") String secret){
         SseEmitter sseEmitter = loginService.getSseEmitter(mail);
