@@ -5,12 +5,9 @@ import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -20,7 +17,11 @@ import javax.mail.internet.MimeMessage;
 import javax.servlet.http.Cookie;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Key;
 import java.util.Base64;
@@ -31,18 +32,19 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 @Service
+@Slf4j
 public class LoginService {
 
-    private final String FROM = "9669579@naver.com"; // 보내는 사람의 이메일 주소
+    private final String FROM = "a01043429904@gmail.com"; // 보내는 사람의 이메일 주소
 
-    @Value("password")
-    private String PASSWORD; // 보내는 사람의 이메일 계정 비밀번호
-    private final String HOST = "smtp.naver.com"; // 구글 메일 서버 호스트 이름
-    private final String MAIL_PATH = "C:\\Users\\hojun\\Desktop\\Git\\Travel-Mapper\\study\\src\\main\\resources\\templates\\QRpage.html";
+    //    @Value("password")
+    private String PASSWORD = "syxa csqn bhaz seyt"; // 보내는 사람의 이메일 계정 비밀번호
+    private final String HOST = "smtp.gmail.com"; // 구글 메일 서버 호스트 이름
+    private final URL MAIL_PATH = getClass().getClassLoader().getResource("templates/QRpage.html");
+    private final String WEB_NAME = "localhost:8080"; // qr 코드를 통해 연결될 url 주소
 
-    private final String WEB_NAME = "localhost:8080";
-    private final ConcurrentHashMap<String, SseEmitter> allEmitters = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, String> secreteRepo = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, SseEmitter> allEmitters = new ConcurrentHashMap<>(); // sse 연결 저장소
+    private final ConcurrentHashMap<String, String> secreteRepo = new ConcurrentHashMap<>(); // qr 로그인 secret 값 저장소
 
     private final Key KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
@@ -62,17 +64,14 @@ public class LoginService {
     /**
      * jwt 파싱
      */
-    public String parseJwt(String token) {
+    public String parseJwt(String token) throws JwtException {
         Jws<Claims> claims = null;
-        try {
-            claims = Jwts.parserBuilder()
-                    .setSigningKey(KEY)
-                    .build()
-                    .parseClaimsJws(token);
-        } catch (Exception ignored) {
-            ignored.printStackTrace();
-            return null;
-        }
+
+        claims = Jwts.parserBuilder()
+                .setSigningKey(KEY)
+                .build()
+                .parseClaimsJws(token);
+
         return claims.getBody().get("id", String.class);
     }
 
@@ -93,8 +92,8 @@ public class LoginService {
     public void sendMail(String receiver, String qrImage) {
 
         Session session = getAuthenticationSession();
-
         String html = null;
+
         try {
             html = findHtmlAndChangeImage(qrImage);
         } catch (IOException e) {
@@ -104,14 +103,26 @@ public class LoginService {
         try {
             Message msg = writeMailMessage(session, receiver, "QR코드 전송", html);
             Transport.send(msg);
+            log.info("메일 전송");
         } catch (MessagingException e) {
             e.printStackTrace();
             throw new RuntimeException("메일 전송 오류", e);
         }
     }
 
+    /**
+     * html 파일 찾아서 qr 이미지 넣기
+     */
     private String findHtmlAndChangeImage(String qrImage) throws IOException {
-        String html = new String(Files.readAllBytes(Paths.get(MAIL_PATH)), "UTF-8");
+
+        Path path = null;
+        try {
+            path = Paths.get(MAIL_PATH.toURI());
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+        String html = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+
         return html.replace("{QR_CODE}", "data:image/png;base64," + qrImage);
     }
 
@@ -123,7 +134,6 @@ public class LoginService {
         props.setProperty("mail.smtp.host", host);
         props.setProperty("mail.smtp.port", "587");
         props.setProperty("mail.smtp.auth", "true");
-        props.setProperty("mail.smtp.starttls.enable", "true");
         props.setProperty("mail.smtp.starttls.enable", "true"); // TLS를 활성화합니다.
         return props;
     }
@@ -182,19 +192,19 @@ public class LoginService {
         return qr;
     }
 
-    public void saveQrSecrete(String key, String value){
+    public void saveQrSecrete(String key, String value) {
         secreteRepo.put(key, value);
     }
 
-    public boolean validateSecret(String key, String target){
+    public boolean validateSecret(String key, String target) {
         return secreteRepo.get(key).equals(target);
     }
 
-    public void saveSseEmitter(String key,SseEmitter emitter){
+    public void saveSseEmitter(String key, SseEmitter emitter) {
         allEmitters.put(key, emitter);
     }
 
-    public SseEmitter getSseEmitter(String key){
+    public SseEmitter getSseEmitter(String key) {
         return allEmitters.get(key);
     }
 }
