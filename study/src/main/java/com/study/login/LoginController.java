@@ -66,8 +66,6 @@ public class LoginController {
             e.printStackTrace();
             throw new RuntimeException("잘못된 jwt 값", e);
         }
-
-        System.out.println("성공");
         
         return ResponseEntity.ok().build();
     }

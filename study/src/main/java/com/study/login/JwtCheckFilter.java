@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class JwtCheckFilter extends HttpFilter {
 
@@ -29,7 +30,6 @@ public class JwtCheckFilter extends HttpFilter {
     protected void doFilter(HttpServletRequest request,
                             HttpServletResponse response,
                             FilterChain chain) throws IOException, ServletException {
-        System.out.println("필터 적용");
 
         // HttpServletRequest 객체에서 쿠키 배열 가져오기
         Cookie[] cookies = request.getCookies();
@@ -37,7 +37,7 @@ public class JwtCheckFilter extends HttpFilter {
         // 이름이 token 인 쿠키 찾기
         Optional<Cookie> tokenCookie = Optional.ofNullable(cookies)
                 .map(Arrays::stream)
-                .orElseGet(null)
+                .orElseGet(Stream::empty)
                 .filter(cookie -> "token".equals(cookie.getName()))
                 .findFirst();
 
@@ -53,7 +53,10 @@ public class JwtCheckFilter extends HttpFilter {
                 e.printStackTrace();
                 throw new RuntimeException("잘못된 jwt 값", e);
             }
+        } else {
+          // todo jwt 가 없는 요청 처리
+            System.out.println("jwt 가 없음");
+            chain.doFilter(request,response);
         }
     }
-
 }
