@@ -54,8 +54,7 @@ public class LoginController {
     /**
      * jwt 토큰 검증 및 jwt 토큰의 정보와 파라미터 id값과 같은지 확인
      */
-    @RequestMapping("/login/token")
-    @ResponseBody
+    @RequestMapping("/login/check")
     public ResponseEntity checkJwt(@CookieValue("token") Cookie jwt, @RequestParam("id") String idInput) {
         String tokenValue = jwt.getValue();
         try {
@@ -68,6 +67,8 @@ public class LoginController {
             throw new RuntimeException("잘못된 jwt 값", e);
         }
 
+        System.out.println("성공");
+        
         return ResponseEntity.ok().build();
     }
 

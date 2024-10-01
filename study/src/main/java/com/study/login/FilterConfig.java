@@ -15,7 +15,7 @@ public class FilterConfig {
     public FilterRegistrationBean<JwtCheckFilter> customFilter() {
         FilterRegistrationBean<JwtCheckFilter> registrationBean = new FilterRegistrationBean<>();
         registrationBean.setFilter(new JwtCheckFilter(loginService));
-        registrationBean.addUrlPatterns("/*"); // 필터 적용 경로 설정
+        registrationBean.addUrlPatterns("/api/login/check"); // 필터 적용 경로 설정
         return registrationBean;
     }
 }
