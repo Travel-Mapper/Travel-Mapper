@@ -1,9 +1,12 @@
 package com.study.chat.entity;
 
+import com.study.chat.dto.ChatMsgDto;
+import com.study.chat.service.ChatService;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.web.socket.WebSocketSession;
 
 import java.time.LocalDateTime;
 
@@ -20,5 +23,11 @@ public class ChatRoom {
         this.roomId = roomId;
         this.roomName = roomName;
         this.createdAt = LocalDateTime.now();
+    }
+
+    public void handlerActions(WebSocketSession session, ChatMsgDto chatMsg, ChatService chatService) {
+    }
+
+    public void handleSessionClosed(WebSocketSession session, ChatService chatService) {
     }
 }

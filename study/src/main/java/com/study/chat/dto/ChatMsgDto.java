@@ -8,11 +8,13 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class ChatMsgDto {
-    public enum MessageType {
-        ENTER, CHAT, CLOSE
+
+    public enum ChatType {
+        ENTER, TALK, CLOSE
     }
 
-    private MessageType type;
+    private ChatType type;
+    private Long id;
     private String roomId;
     private String sender;
     private String msg;

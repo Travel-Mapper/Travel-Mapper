@@ -1,0 +1,7 @@
+<!-- xml 파일은 메시지를 데이터베이스에 저장하는 역할 -->
+<mapper namespace="com.example.mapper.MessageMapper">
+    <insert id="saveMessage">
+        INSERT INTO messages (content, sender)
+        VALUES (#{content}, #{sender})
+    </insert>
+</mapper>

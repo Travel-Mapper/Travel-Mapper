@@ -7,7 +7,11 @@ import org.apache.ibatis.annotations.*;
 import java.util.List;
 
 @Mapper
+// MyBatis가 XML 파일의 SQL 쿼리를 처리하도록 매퍼 인터페이스 정의
 public interface ChatRoomMapper {
+
+    @Insert("INSERT INTO messages (content, sender) VALUES (#{content}, #{sender})")
+    void saveMessage(String content, String sender);
 
     @Select("SELECT * FROM chat_room WHERE room_id = #{roomId}")
     ChatRoom findById(String roomId);

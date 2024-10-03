@@ -6,14 +6,14 @@ import com.study.chat.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
 
-@Controller
-@RequestMapping("/api")
+@RestController
+@RequestMapping("/api/chatRoom")
 @RequiredArgsConstructor
 @Slf4j
 public class ChatController {
@@ -21,7 +21,7 @@ public class ChatController {
     private final ChatService chatService;
 
     // 채팅방 개설
-    @PostMapping("/createroom")
+    @PostMapping("/new")
     public ResponseEntity<String> createRoom(@RequestBody Map<String, String> name) {
         String roomName = name.get("roomName");
         log.warn("roomName : {}", roomName);
@@ -30,65 +30,73 @@ public class ChatController {
         return ResponseEntity.ok(room.getRoomId());
     }
 
-    // 방 리스트 반환
+    // 전체 채팅방 목록 조회
     @GetMapping("/list")
     public ResponseEntity<List<ChatRoom>> findAllRoom(){
         log.info("chatList : {}", chatService.findAll());
         return ResponseEntity.ok(chatService.findAll());
     }
 
-    // 특정 방 조회
-    @GetMapping("/chatroom/{roomId}")
+    // 방 정보 가져오기
+    @GetMapping("/{roomId}")
     public ResponseEntity<ChatRoom> chatRoomInfo(@PathVariable String roomId) {
         ChatRoom room = chatService.findById(roomId);
         return ResponseEntity.ok(room);
     }
 
-//        // 사용자 채팅방 참여
-//    // /api/chatrooms/join 경로로 POST 요청 시 사용자가 특정 채팅방에 참여하고 해당 채팅방으로 리다이렉트함
-//    @PostMapping("/chatrooms/join")
-//    public String joinChatroom(@RequestParam String roomNum, @RequestParam String username, Model model) {
-//        chatRoomService.addParticipant(roomNum, username);
-//        return "redirect:/api/chatrooms/" + roomNum; // 채팅방 참여 후 해당 채팅방으로 리다이렉트
-//    }
-//
-//    // 사용자 채팅방 나가기
-//    // /api/chatrooms/leave 경로로 POST 요청 시 사용자가 특정 채팅방에서 나가고 채팅방 목록으로 리다이렉트함
-//    @PostMapping("/chatrooms/leave")
-//    public String leaveChatroom(@RequestParam String roomNum, @RequestParam String username) {
-//        chatRoomService.removeParticipant(roomNum, username);
-//        return "redirect:/api/chatroom"; // 채팅방 나가기 후 채팅방 목록으로 리다이렉트
-//    }
+    // 메세지 저장하기
+
+    // 해당 방의 최근 메세지 불러오기
+
+    // 채팅 내역 삭제
+
+    // 채팅방 삭제
 
 
+    // 특정 채팅방 참여
+    @PostMapping("/{roomId}/join")
+    public ResponseEntity<String> joinRoom(@PathVariable String roomId, @RequestBody Map<String, String> user) {
+        String username = user.get("username");
+        chatService.joinChatRoom(roomId, username);
+        log.info("{} 사용자가 채팅방 {}에 참여했습니다.", username, roomId);
+        return ResponseEntity.ok(username + " 사용자가 채팅방 " + roomId + "에 참여했습니다.");
+    }
 
-//    // 채팅방 목록 조회
-//    // /api/chatroom 경로로 GET 요청 시 모든 채팅방 목록을 조회하고, 이를 chatList.html 뷰에 전달함
-//    @GetMapping("/chatroom")
-//    public String chatList(Model model) {
-//        List<ChatRoom> chatRooms = chatRoomService.findAllRooms();
-//        model.addAttribute("chatRooms", chatRooms);
-//        return "chatList"; // chatList.html로 렌더링
-//    }
-//
-//    // 채팅방 메세지 전송
-//    // /api/chatrooms/{chatroomId}/message 경로로 POST 요청 시 메시지와 송신자 정보를 받아 저장한 후 해당 채팅방으로 리다이렉트함
-//    @PostMapping("/chatrooms/{chatroomId}/message")
-//    public String sendMessage(@PathVariable String chatroomId, @RequestParam String message, @RequestParam String sender, Model model) {
-//        ChatMsgDto chatDTO = new ChatMsgDto();
-//        chatDTO.setRoomNum(Integer.parseInt(chatroomId));
-//        chatDTO.setSender(sender);
-//        chatDTO.setMsg(message);
-//        chatService.save(new Chat(chatDTO)); // 메시지 저장
-//        return "redirect:/api/chatrooms/" + chatroomId; // 메시지 전송 후 해당 채팅방으로 리다이렉트
-//    }
-//
-//    // 채팅방 메세지 조회
-//    // /api/chatrooms/{chatroomId} 경로로 GET 요청 시 주어진 채팅방 ID에 해당하는 모든 메시지를 조회하여 chatroom.html 뷰에 전달함
-//    @GetMapping("/chatrooms/{chatroomId}")
-//    public String getMessages(@PathVariable String chatroomId, Model model) {
-//        List<Chat> messages = chatService.findMessagesByRoomNum(Integer.parseInt(chatroomId));
-//        model.addAttribute("messages", messages);
-//        return "chatroom"; // chatroom.html로 렌더링
-//    }
+    // 프로필 사진
+
+    // 사진, 동영상 전송  s3, local() 사용
+    @PostMapping("/{roomId}/upload")
+    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
+        ChatController fileService = null;
+        String fileUrl = String.valueOf(fileService.uploadFile(file)); // fileService는 파일 업로드를 처리하는 서비스
+        log.info("파일 업로드 완료: {}", fileUrl);
+        return ResponseEntity.ok("파일이 업로드되었습니다: " + fileUrl);
+    }
+
+    // 사용자 채팅방 참여 인원 / 참여 인원 수
+    @GetMapping("/{roomId}/participants")
+    public ResponseEntity<List<String>> getParticipants(@PathVariable String roomId) {
+        List<String> participants = chatService.getParticipants(roomId);
+        log.info("채팅방 {}의 참여 인원: {}", roomId, participants);
+        return ResponseEntity.ok(participants);
+    }
+
+    // 사용자 채팅방 나가기 / 내용 저장
+    @PostMapping("/{roomId}/leave")
+    public ResponseEntity<String> leaveRoom(@PathVariable String roomId, @RequestBody Map<String, String> user) {
+        String username = user.get("username");
+        chatService.leaveChatRoom(roomId, username);
+        log.info("{} 사용자가 채팅방 {}에서 나갔습니다.", username, roomId);
+        return ResponseEntity.ok(username + " 사용자가 채팅방 " + roomId + "에서 나갔습니다.");
+    }
+
+    // 채팅방 메세지 전송
+    @PostMapping("/{roomId}/message")
+    public ResponseEntity<String> sendMessage(@PathVariable String roomId, @RequestBody Map<String, String> message) {
+        String username = message.get("username");
+        String content = message.get("content");
+        chatService.sendMessage(roomId, username, content);
+        log.info("채팅방 {}에 {}가 메시지를 보냈습니다: {}", roomId, username, content);
+        return ResponseEntity.ok("메시지가 전송되었습니다.");
+    }
 }
